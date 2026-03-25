@@ -3,18 +3,11 @@ import { encodeFunctionData, getAddress } from "viem";
 import {
   eip3009ABI,
   erc20AllowanceAbi,
-  ERC20_APPROVE_GAS_LIMIT,
-  DEFAULT_MAX_FEE_PER_GAS,
   PERMIT2_ADDRESS,
   x402ExactPermit2ProxyABI,
   x402ExactPermit2ProxyAddress,
 } from "../../constants";
-import {
-  multicall,
-  ContractCall,
-  MULTICALL3_ADDRESS,
-  multicall3GetEthBalanceAbi,
-} from "../../multicall";
+import { multicall, ContractCall } from "../../multicall";
 import { FacilitatorEvmSigner } from "../../signer";
 import { ExactPermit2Payload } from "../../types";
 import {
@@ -251,18 +244,12 @@ export async function checkPermit2Prerequisites(
       functionName: "balanceOf",
       args: [payer],
     },
-    {
-      address: MULTICALL3_ADDRESS,
-      abi: multicall3GetEthBalanceAbi,
-      functionName: "getEthBalance",
-      args: [payer],
-    },
   ];
 
   try {
     const results = await multicall(signer.readContract.bind(signer), diagnosticCalls);
 
-    const [proxyResult, balanceResult, ethBalanceResult] = results;
+    const [proxyResult, balanceResult] = results;
 
     if (proxyResult.status === "failure") {
       return { isValid: false, invalidReason: Errors.ErrPermit2ProxyNotDeployed, payer };
@@ -272,18 +259,6 @@ export async function checkPermit2Prerequisites(
       const balance = balanceResult.result as bigint;
       if (balance < BigInt(amountRequired)) {
         return { isValid: false, invalidReason: Errors.ErrPermit2InsufficientBalance, payer };
-      }
-    }
-
-    if (ethBalanceResult.status === "success") {
-      const minEthForApprovalGas = ERC20_APPROVE_GAS_LIMIT * DEFAULT_MAX_FEE_PER_GAS;
-      const ethBalance = ethBalanceResult.result as bigint;
-      if (ethBalance < minEthForApprovalGas) {
-        return {
-          isValid: false,
-          invalidReason: Errors.ErrErc20ApprovalInsufficientEthForGas,
-          payer,
-        };
       }
     }
   } catch {
