@@ -244,6 +244,22 @@ export const proxy = paymentProxy(
         ...declareErc20ApprovalGasSponsoringExtension(),
       },
     },
+    "/api/upto/evm/permit2": {
+      accepts: {
+        payTo: EVM_PAYEE_ADDRESS,
+        scheme: "upto",
+        network: EVM_NETWORK,
+        price: {
+          amount: "2000",
+          asset: EVM_PERMIT2_ASSET,
+          extra: {
+            assetTransferMethod: "permit2",
+            name: EVM_NETWORK == "eip155:84532" ? "USDC" : "USD Coin",
+            version: "2",
+          },
+        },
+      },
+    },
     "/api/upto/evm/permit2-eip2612GasSponsoring": {
       accepts: {
         payTo: EVM_PAYEE_ADDRESS,
@@ -293,6 +309,7 @@ export const config = {
     "/api/protected-permit2-proxy",
     "/api/protected-permit2-eip2612-proxy",
     "/api/protected-permit2-erc20-proxy",
+    "/api/upto/evm/permit2",
     "/api/upto/evm/permit2-eip2612GasSponsoring",
     "/api/upto/evm/permit2-erc20ApprovalGasSponsoring",
   ],
